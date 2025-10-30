@@ -4,12 +4,16 @@ import FilterToolbar from './components/FilterToolbar';
 import PaletteGrid from './components/PaletteGrid';
 import ColorDetail from './components/ColorDetail';
 import StatsSummary from './components/StatsSummary';
+import AuthPanel from './components/AuthPanel';
+import { useAuth } from './context/AuthContext';
 import './styles/app.css';
+import './styles/auth.css';
 
 const categories: (GlassCategory | 'all')[] = ['all', 'Architectural', 'Art', 'Laboratory', 'Automotive', 'Decorative'];
 const transmissions: (LightTransmission | 'all')[] = ['all', 'high', 'medium', 'low'];
 
 function App() {
+  const { user, loading, signOut: signOutUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<GlassCategory | 'all'>('all');
   const [transmissionFilter, setTransmissionFilter] = useState<LightTransmission | 'all'>('all');
@@ -46,17 +50,44 @@ function App() {
     [selectedId]
   );
 
+  if (loading) {
+    return (
+      <div className="auth-container">
+        <div className="auth-loading">Loading your experience…</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="auth-container">
+        <AuthPanel />
+      </div>
+    );
+  }
+
   return (
     <div className="app-shell">
       <header className="app-header">
-        <div>
+        <div className="app-header-main">
           <h1>GlassVision Studio</h1>
           <p>
             Explore architectural and specialty glass tones, compare performance metrics, and curate
             palettes tailored for your next project.
           </p>
         </div>
-        <StatsSummary data={glassPalette} />
+        <div className="app-header-side">
+          <StatsSummary data={glassPalette} />
+          <div className="account-card">
+            <div className="account-info">
+              <span className="account-label">Signed in as</span>
+              <span className="account-email">{user.email ?? 'Anonymous user'}</span>
+            </div>
+            <button className="account-signout" onClick={() => void signOutUser()}>
+              Sign out
+            </button>
+          </div>
+        </div>
       </header>
 
       <FilterToolbar
